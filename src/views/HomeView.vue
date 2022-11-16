@@ -6,11 +6,21 @@ import { menu } from '@/utils/menu'
 
 const defaultDay = ref(new Date().getDate())
 const localMenu = ref(menu[defaultDay.value.toString()])
+let days = []
 
 const changeDay = day => {
   console.log(day)
   localMenu.value = menu[day]
 }
+const loadDays = () => {
+  const today = new Date().getDate()
+  days = [today, today + 1, today + 2].map(day => ({
+    value: day.toString(),
+    text: day.toString(),
+  }))
+}
+
+loadDays()
 
 console.log(localMenu.value)
 </script>
@@ -19,11 +29,7 @@ console.log(localMenu.value)
   <main>
     <h2 class="font-bold text-3xl mb-4 dark:text-white">Days</h2>
     <RadioGroups
-      :options="[
-        { value: '14', text: '14' },
-        { value: '15', text: '15' },
-        { value: '16', text: '16' },
-      ]"
+      :options="days"
       :defaultOption="defaultDay.toString()"
       name="days"
       @change="changeDay"
