@@ -17,6 +17,7 @@ console.log(localMenu.value)
 
 <template>
   <main>
+    <h2 class="font-bold text-3xl mb-4 dark:text-white">Days</h2>
     <RadioGroups
       :options="[
         { value: '14', text: '14' },

@@ -5,6 +5,7 @@ import ToolingIcon from './icons/IconTooling.vue'
 import EcosystemIcon from './icons/IconEcosystem.vue'
 import CommunityIcon from './icons/IconCommunity.vue'
 import SupportIcon from './icons/IconSupport.vue'
+import BordererCard from './BordererCard.vue'
 
 defineProps({
   breakfast: {
@@ -31,48 +32,51 @@ defineProps({
 </script>
 
 <template>
-  <ScheduleItem>
-    <template #icon>
-      <DocumentationIcon />
-    </template>
-    <template #heading>Desayuno</template>
+  <section class="mt-10">
+    <h2 class="font-bold text-3xl dark:text-white">Menú de hoy</h2>
+    <ScheduleItem>
+      <template #icon>
+        <DocumentationIcon />
+      </template>
+      <template #heading>
+        <BordererCard title="Desayuno" :text="breakfast" />
+      </template>
+    </ScheduleItem>
 
-    {{ breakfast }}
-  </ScheduleItem>
+    <ScheduleItem>
+      <template #icon>
+        <ToolingIcon />
+      </template>
+      <template #heading>
+        <BordererCard title="Almuerzo" :text="snack" />
+      </template>
+    </ScheduleItem>
 
-  <ScheduleItem>
-    <template #icon>
-      <ToolingIcon />
-    </template>
-    <template #heading>Almuerzo</template>
+    <ScheduleItem>
+      <template #icon>
+        <EcosystemIcon />
+      </template>
+      <template #heading>
+        <BordererCard title="Comida" :text="lunch" />
+      </template>
+    </ScheduleItem>
 
-    {{ snack }}
-  </ScheduleItem>
+    <ScheduleItem>
+      <template #icon>
+        <CommunityIcon />
+      </template>
+      <template #heading>
+        <BordererCard title="Merienda" :text="snack2" />
+      </template>
+    </ScheduleItem>
 
-  <ScheduleItem>
-    <template #icon>
-      <EcosystemIcon />
-    </template>
-    <template #heading>Comida</template>
-
-    {{ lunch }}
-  </ScheduleItem>
-
-  <ScheduleItem>
-    <template #icon>
-      <CommunityIcon />
-    </template>
-    <template #heading>Merienda</template>
-
-    {{ snack2 }}
-  </ScheduleItem>
-
-  <ScheduleItem>
-    <template #icon>
-      <SupportIcon />
-    </template>
-    <template #heading>Cena</template>
-
-    {{ dinner }}
-  </ScheduleItem>
+    <ScheduleItem>
+      <template #icon>
+        <SupportIcon />
+      </template>
+      <template #heading>
+        <BordererCard title="Cena" :text="dinner" />
+      </template>
+    </ScheduleItem>
+  </section>
 </template>
