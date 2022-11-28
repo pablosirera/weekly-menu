@@ -1,7 +1,9 @@
 <script setup>
 import { useUser } from '@/composables/useUser'
+import { useI18n } from 'vue-i18n'
 
 const { isAuthenticated } = useUser()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -11,12 +13,12 @@ const { isAuthenticated } = useUser()
         <h1
           class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl"
         >
-          Weekly Menu
+          {{ t('general.appTitle') }}
         </h1>
         <router-link
           v-if="!isAuthenticated()"
           to="/login"
-          class="block shrink-0"
+          class="block shrink-0 hover:px-2 hover:rounded"
         >
           Login
         </router-link>
