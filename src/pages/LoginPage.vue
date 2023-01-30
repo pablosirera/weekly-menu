@@ -1,40 +1,27 @@
 <script setup>
 import { computed, ref } from 'vue'
-import LoginForm from '../components/auth/LoginForm.vue'
-import useAuth from '@/composables/useAuth'
-import { useRouter } from 'vue-router'
+// import LoginForm from '../components/auth/LoginForm.vue'
+import { useAuth } from '@/composables/useAuth'
 
-const { login, createUser } = useAuth()
-const router = useRouter()
+const { login } = useAuth()
 const isRegisterMode = ref(true)
 
 const title = computed(() => {
   return isRegisterMode.value ? 'Weekly Menu 🥘' : 'de nuevo'
 })
-const description = computed(() => {
-  return isRegisterMode.value
-    ? 'El formulario será sencillo, nombre de usuario y una sencilla contraseña.'
-    : ''
-})
+// const description = computed(() => {
+//   return isRegisterMode.value
+//     ? 'El formulario será sencillo, nombre de usuario y una sencilla contraseña.'
+//     : ''
+// })
 
-const toggleRegisterMode = () => {
-  isRegisterMode.value = !isRegisterMode.value
-}
+// const toggleRegisterMode = () => {
+//   isRegisterMode.value = !isRegisterMode.value
+// }
 
-const handleLogin = async ({ email, password }) => {
-  console.log(email)
+const handleLogin = async () => {
   try {
-    await login({ email, password })
-    router.push({ name: 'HomePage' })
-  } catch (error) {
-    console.error(error.message)
-  }
-}
-
-const handleCreateUser = async ({ email, password }) => {
-  try {
-    await createUser({ email, password })
-    router.push({ name: 'HomePage' })
+    await login()
   } catch (error) {
     console.error(error.message)
   }
@@ -65,16 +52,25 @@ const handleCreateUser = async ({ email, password }) => {
             Bienvenido/a {{ title }}
           </h1>
 
-          <p class="mt-4 leading-relaxed text-gray-500 dark:text-gray-400">
+          <!-- <p class="mt-4 leading-relaxed text-gray-500 dark:text-gray-400">
             {{ description }}
-          </p>
+          </p> -->
 
-          <LoginForm
+          <section class="flex justify-center mt-6">
+            <button
+              class="bg-red-600 px-4 py-2 rounded-full text-white cursor-pointer hover:bg-red-700"
+              @click="handleLogin"
+            >
+              Iniciar sesión con google
+            </button>
+          </section>
+
+          <!-- <LoginForm
             :is-register="isRegisterMode"
             @change-view="toggleRegisterMode"
             @login="handleLogin"
             @create="handleCreateUser"
-          />
+          /> -->
         </div>
       </main>
     </div>

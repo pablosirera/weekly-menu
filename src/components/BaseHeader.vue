@@ -1,8 +1,10 @@
 <script setup>
 import { useUser } from '@/composables/useUser'
+import { useAuth } from '@/composables/useAuth'
 import { useI18n } from 'vue-i18n'
 
 const { isAuthenticated } = useUser()
+const { logout } = useAuth()
 const { t } = useI18n()
 </script>
 
@@ -18,10 +20,17 @@ const { t } = useI18n()
         <router-link
           v-if="!isAuthenticated()"
           to="/login"
-          class="block shrink-0 hover:px-2 hover:rounded"
+          class="block shrink-0 px-2 hover:rounded"
         >
           Login
         </router-link>
+        <button
+          v-else
+          @click="logout()"
+          class="block shrink-0 px-2 hover:rounded text-green-400 hover:bg-green-900"
+        >
+          Logout
+        </button>
       </div>
     </div>
   </header>

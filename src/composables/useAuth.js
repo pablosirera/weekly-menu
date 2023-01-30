@@ -1,25 +1,16 @@
+import { useRouter } from 'vue-router'
+import { UserModel } from '../models/UserModel'
 import useSupabase from './useSupabase'
 import { useUser } from './useUser'
 
-export default function useAuth() {
+export function useAuth() {
   const { supabase } = useSupabase()
   const { setUser } = useUser()
+  const router = useRouter()
 
-  const createUser = async ({ email, password }) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-    console.log(data)
-    if (error) throw error
-
-    setUser(data.user)
-  }
-
-  const login = async ({ email, password }) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+  const login = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
     })
     console.log(data)
     if (error) throw error
@@ -27,17 +18,27 @@ export default function useAuth() {
     setUser(data)
   }
 
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut()
+
+    if (error) throw error
+
+    router.push({ name: 'LoginPage' })
+  }
+
   const getSession = async () => {
     const { data, error } = await supabase.auth.getSession()
 
     if (error) throw error
 
-    console.log(data)
+    if (data.session && data.session.user) {
+      setUser(new UserModel(data.session.user))
+    }
   }
 
   return {
-    createUser,
     login,
+    logout,
     getSession,
   }
 }
