@@ -1,10 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '@/pages/HomePage.vue'
-import { useAuth } from '../composables/useAuth'
 import { useUser } from '../composables/useUser'
-
-const { getSession } = useAuth()
-const { isAuthenticated } = useUser()
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,7 +22,7 @@ const router = createRouter({
 })
 
 router.beforeEach(to => {
-  getSession()
+  const { isAuthenticated } = useUser()
 
   if (!isAuthenticated() && to.meta.requiresAuth) {
     return { name: 'LoginPage' }

@@ -2,8 +2,10 @@
 import { computed, ref } from 'vue'
 // import LoginForm from '../components/auth/LoginForm.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useRouter } from 'vue-router'
 
-const { login } = useAuth()
+const { login, getSession } = useAuth()
+const router = useRouter()
 const isRegisterMode = ref(true)
 
 const title = computed(() => {
@@ -26,6 +28,15 @@ const handleLogin = async () => {
     console.error(error.message)
   }
 }
+
+const checkAuthentication = async () => {
+  const data = await getSession()
+  if (data) {
+    router.push({ name: 'HomePage' })
+  }
+}
+
+checkAuthentication()
 </script>
 
 <template>
@@ -45,7 +56,7 @@ const handleLogin = async () => {
         aria-label="Main"
         class="flex items-center sm:justify-center px-8 py-8 sm:px-12 lg:col-span-7 lg:py-12 lg:px-16 xl:col-span-6"
       >
-        <div class="w-full sm:max-w-xl lg:max-w-3xl">
+        <div class="w-full flex items-center flex-col sm:max-w-xl lg:max-w-3xl">
           <h1
             class="mt-6 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl md:text-4xl"
           >

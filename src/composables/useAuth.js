@@ -12,7 +12,7 @@ export function useAuth() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
     })
-    console.log(data)
+
     if (error) throw error
 
     setUser(data)
@@ -34,6 +34,8 @@ export function useAuth() {
     if (data.session && data.session.user) {
       setUser(new UserModel(data.session.user))
     }
+
+    return data.session
   }
 
   return {
