@@ -8,24 +8,8 @@ import SupportIcon from './icons/IconSupport.vue'
 import BordererCard from './BordererCard.vue'
 
 defineProps({
-  breakfast: {
-    type: String,
-    required: true,
-  },
-  snack: {
-    type: String,
-    required: true,
-  },
-  lunch: {
-    type: String,
-    required: true,
-  },
-  snack2: {
-    type: String,
-    required: true,
-  },
-  dinner: {
-    type: String,
+  menu: {
+    type: Object,
     required: true,
   },
 })
@@ -33,13 +17,14 @@ defineProps({
 
 <template>
   <section class="mt-10">
-    <h2 class="font-bold text-3xl dark:text-white">Menú de hoy</h2>
+    <!-- TODO: pasar las keys a constantes -->
+    <h2 class="font-bold text-3xl dark:text-white">Menú</h2>
     <ScheduleItem>
       <template #icon>
         <DocumentationIcon />
       </template>
       <template #heading>
-        <BordererCard title="Desayuno" :text="breakfast" />
+        <BordererCard title="Desayuno" :text="menu['breakfast']?.description" />
       </template>
     </ScheduleItem>
 
@@ -48,7 +33,7 @@ defineProps({
         <ToolingIcon />
       </template>
       <template #heading>
-        <BordererCard title="Almuerzo" :text="snack" />
+        <BordererCard title="Almuerzo" :text="menu['snack']?.description" />
       </template>
     </ScheduleItem>
 
@@ -57,7 +42,7 @@ defineProps({
         <EcosystemIcon />
       </template>
       <template #heading>
-        <BordererCard title="Comida" :text="lunch" />
+        <BordererCard title="Comida" :text="menu['lunch']?.description" />
       </template>
     </ScheduleItem>
 
@@ -66,7 +51,7 @@ defineProps({
         <CommunityIcon />
       </template>
       <template #heading>
-        <BordererCard title="Merienda" :text="snack2" />
+        <BordererCard title="Merienda" :text="menu['snack2']?.description" />
       </template>
     </ScheduleItem>
 
@@ -75,7 +60,7 @@ defineProps({
         <SupportIcon />
       </template>
       <template #heading>
-        <BordererCard title="Cena" :text="dinner" />
+        <BordererCard title="Cena" :text="menu['dinner']?.description" />
       </template>
     </ScheduleItem>
   </section>
