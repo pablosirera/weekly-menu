@@ -4,5 +4,16 @@
   },
   "home": {
     "days": "Días"
+  },
+  "menu": {
+    "breakfast": "Desayuno | Desayunos",
+    "dinner": "Cena | Cenas",
+    "lunch": "Comida | Comidas",
+    "snack": "Almuerzo | Almuerzos",
+    "snack2": "Merienda | Meriendas"
+  },
+  "table": {
+    "description": "Descripción",
+    "id": "ID"
   }
 }

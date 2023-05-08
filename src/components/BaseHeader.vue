@@ -2,6 +2,7 @@
 import { useUser } from '@/composables/useUser'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from 'vue-i18n'
+import { BuildingStorefrontIcon } from '@heroicons/vue/24/outline'
 
 const { isAuthenticated } = useUser()
 const { logout } = useAuth()
@@ -12,11 +13,16 @@ const { t } = useI18n()
   <header aria-label="Page Header">
     <div class="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between gap-4">
-        <h1
+        <RouterLink
           class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl"
+          to="/"
         >
           {{ t('general.appTitle') }}
-        </h1>
+        </RouterLink>
+        <BuildingStorefrontIcon
+          class="h-6 w-6"
+          @click="$router.push('/recipes')"
+        />
         <router-link
           v-if="!isAuthenticated()"
           to="/login"

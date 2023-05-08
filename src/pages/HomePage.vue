@@ -2,10 +2,11 @@
 import { ref } from 'vue'
 import MenuSchedule from '@/components/MenuSchedule.vue'
 import RadioGroups from '@/components/RadioGroups.vue'
-import BaseHeader from '@/components/BaseHeader.vue'
+
 import { useI18n } from 'vue-i18n'
 import { useMenu } from '@/composables/useMenu'
 import { useRecipes } from '@/composables/useRecipes'
+import BaseLayout from '../components/BaseLayout.vue'
 
 const { t } = useI18n()
 const { createMenu, readMenu } = useMenu()
@@ -18,7 +19,8 @@ const today = new Date().getDate()
 let days = []
 
 const loadDays = () => {
-  days = [today, today + 1, today + 2].map(day => ({
+  // TODO refactor this array
+  days = [today, today + 1, today + 2, today + 3, today + 4].map(day => ({
     value: day.toString(),
     text: day,
   }))
@@ -60,8 +62,7 @@ loadMenu(today)
 </script>
 
 <template>
-  <BaseHeader />
-  <main class="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-8">
+  <BaseLayout>
     <div class="flex justify-between items-center mb-2">
       <h2 class="font-bold text-3xl mb-4 dark:text-white">
         {{ t('home.days') }}
@@ -81,5 +82,5 @@ loadMenu(today)
     />
     <MenuSchedule v-if="Object.keys(todayMenu).length" :menu="todayMenu" />
     <p v-else class="text-center mt-16">No tienes un menú creado todavía.</p>
-  </main>
+  </BaseLayout>
 </template>
