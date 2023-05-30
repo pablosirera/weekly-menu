@@ -80,8 +80,19 @@ export function useMenu() {
     return allRecipes
   }
 
+  const updateMenu = async ({ id, recipeType, recipeTypeId }) => {
+    console.log(id, recipeType, recipeTypeId)
+    const { error } = await supabase
+      .from('menu')
+      .update({ [recipeType]: recipeTypeId })
+      .eq('id', id)
+
+    if (error) throw error
+  }
+
   return {
     createMenu,
     readMenu,
+    updateMenu,
   }
 }

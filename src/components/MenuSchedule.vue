@@ -13,6 +13,7 @@ defineProps({
     required: true,
   },
 })
+defineEmits(['updateMenu'])
 </script>
 
 <template>
@@ -24,7 +25,12 @@ defineProps({
         <DocumentationIcon />
       </template>
       <template #heading>
-        <BordererCard title="Desayuno" :text="menu['breakfast']?.description" />
+        <BordererCard
+          title="Desayuno"
+          :text="menu['breakfast']?.description"
+          :has-edit-icon="true"
+          @edit="$emit('updateMenu', 'breakfast')"
+        />
       </template>
     </ScheduleItem>
 
@@ -33,7 +39,12 @@ defineProps({
         <ToolingIcon />
       </template>
       <template #heading>
-        <BordererCard title="Almuerzo" :text="menu['snack']?.description" />
+        <BordererCard
+          title="Almuerzo"
+          :text="menu['snack']?.description"
+          :has-edit-icon="true"
+          @edit="$emit('updateMenu', 'snack')"
+        />
       </template>
     </ScheduleItem>
 
@@ -42,7 +53,12 @@ defineProps({
         <EcosystemIcon />
       </template>
       <template #heading>
-        <BordererCard title="Comida" :text="menu['lunch']?.description" />
+        <BordererCard
+          title="Comida"
+          :text="menu['lunch']?.description"
+          :has-edit-icon="true"
+          @edit="$emit('updateMenu', 'lunch')"
+        />
       </template>
     </ScheduleItem>
 
@@ -51,7 +67,12 @@ defineProps({
         <CommunityIcon />
       </template>
       <template #heading>
-        <BordererCard title="Merienda" :text="menu['snack2']?.description" />
+        <BordererCard
+          title="Merienda"
+          :text="menu['snack2']?.description"
+          :has-edit-icon="true"
+          @edit="$emit('updateMenu', 'snack2')"
+        />
       </template>
     </ScheduleItem>
 
@@ -60,7 +81,12 @@ defineProps({
         <SupportIcon />
       </template>
       <template #heading>
-        <BordererCard title="Cena" :text="menu['dinner']?.description" />
+        <BordererCard
+          title="Cena"
+          :text="menu['dinner']?.description"
+          :has-edit-icon="true"
+          @edit="$emit('updateMenu', 'dinner')"
+        />
       </template>
     </ScheduleItem>
   </section>

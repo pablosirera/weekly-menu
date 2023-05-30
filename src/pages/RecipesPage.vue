@@ -38,6 +38,7 @@ loadData()
         <PlusIcon class="h-6 w-6 rounded-full bg-green-600 text-white" />
       </div>
       <RecipesTable
+        v-if="Object.keys(recipes).length"
         :headers="['id', 'description']"
         :items="recipes[type.name]"
       />

@@ -19,17 +19,16 @@ const { t } = useI18n()
         >
           {{ t('general.appTitle') }}
         </RouterLink>
-        <BuildingStorefrontIcon
-          class="h-6 w-6"
-          @click="$router.push('/recipes')"
-        />
-        <router-link
+        <RouterLink to="/recipes">
+          <BuildingStorefrontIcon class="h-6 w-6" />
+        </RouterLink>
+        <RouterLink
           v-if="!isAuthenticated()"
           to="/login"
           class="block shrink-0 px-2 hover:rounded"
         >
           Login
-        </router-link>
+        </RouterLink>
         <button
           v-else
           @click="logout()"

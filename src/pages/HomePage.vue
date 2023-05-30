@@ -6,7 +6,8 @@ import RadioGroups from '@/components/RadioGroups.vue'
 import { useI18n } from 'vue-i18n'
 import { useMenu } from '@/composables/useMenu'
 import { useRecipes } from '@/composables/useRecipes'
-import BaseLayout from '../components/BaseLayout.vue'
+import BaseLayout from '@/components/BaseLayout.vue'
+import UpdateMenuModal from '@/components/UpdateMenuModal.vue'
 
 const { t } = useI18n()
 const { createMenu, readMenu } = useMenu()
@@ -14,6 +15,8 @@ const { readRecipe } = useRecipes()
 
 const todayMenu = ref({})
 const allRecipes = ref([])
+const showUpdateMenuModal = ref(false)
+const menuTypeToUpdate = ref('')
 
 const today = new Date().getDate()
 let days = []
@@ -57,6 +60,16 @@ const generateMenu = async () => {
   todayMenu.value = allRecipes.value[today]
 }
 
+const openUpdateMenuModal = type => {
+  menuTypeToUpdate.value = type
+  showUpdateMenuModal.value = true
+}
+
+const closeUpdateMenuModal = () => {
+  showUpdateMenuModal.value = false
+  loadMenu(today)
+}
+
 loadDays()
 loadMenu(today)
 </script>
@@ -80,7 +93,17 @@ loadMenu(today)
       name="days"
       @change="day => loadMenu(day)"
     />
-    <MenuSchedule v-if="Object.keys(todayMenu).length" :menu="todayMenu" />
+    <MenuSchedule
+      v-if="Object.keys(todayMenu).length"
+      :menu="todayMenu"
+      @updateMenu="openUpdateMenuModal"
+    />
     <p v-else class="text-center mt-16">No tienes un menú creado todavía.</p>
   </BaseLayout>
+  <UpdateMenuModal
+    v-if="showUpdateMenuModal"
+    :menu-type="menuTypeToUpdate"
+    :menu-today="todayMenu"
+    @close="closeUpdateMenuModal"
+  />
 </template>
