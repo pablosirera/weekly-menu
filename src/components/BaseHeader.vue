@@ -19,23 +19,25 @@ const { t } = useI18n()
         >
           {{ t('general.appTitle') }}
         </RouterLink>
-        <RouterLink to="/recipes">
-          <BuildingStorefrontIcon class="h-6 w-6" />
-        </RouterLink>
-        <RouterLink
-          v-if="!isAuthenticated()"
-          to="/login"
-          class="block shrink-0 px-2 hover:rounded"
-        >
-          Login
-        </RouterLink>
-        <button
-          v-else
-          @click="logout()"
-          class="block shrink-0 px-2 hover:rounded text-green-400 hover:bg-green-900"
-        >
-          Logout
-        </button>
+        <div class="flex gap-4">
+          <RouterLink to="/recipes" class="block shrink-0 px-2 hover:rounded">
+            Recetas
+          </RouterLink>
+          <RouterLink
+            v-if="!isAuthenticated()"
+            to="/login"
+            class="block shrink-0 px-2 hover:rounded"
+          >
+            Login
+          </RouterLink>
+          <button
+            v-else
+            @click="logout()"
+            class="block shrink-0 px-2 hover:rounded text-green-400 hover:bg-green-900"
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   </header>
