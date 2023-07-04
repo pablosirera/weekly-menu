@@ -1,16 +1,18 @@
 <script setup>
 import BaseLayout from '@/components/BaseLayout.vue'
 import { PlusIcon } from '@heroicons/vue/24/outline'
-import RecipesTable from '../components/RecipesTable.vue'
-import { useRecipes } from '../composables/useRecipes'
+import RecipesTable from '@/components/RecipesTable.vue'
+import { useRecipes } from '@/composables/useRecipes'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import CreateNewRecipeModal from '@/components/CreateNewRecipeModal.vue'
 
 const { listRecipesTypes, listRecipes } = useRecipes()
 const { t } = useI18n()
 
 const types = ref([])
 const recipes = ref({})
+const shouldShowRecipeForm = ref(false)
 
 const loadData = async () => {
   types.value = await listRecipesTypes()
@@ -25,23 +27,47 @@ const loadData = async () => {
   }
 }
 
+const showRecipeForm = () => {
+  shouldShowRecipeForm.value = true
+}
+
+const closeCreateRecipeModal = async recipeType => {
+  if (recipeType) {
+    const type = types.value.find(t => t.id === recipeType)
+    recipes.value[type.name] = await listRecipes({ type: type.id })
+  }
+  shouldShowRecipeForm.value = false
+}
+
 loadData()
 </script>
 
 <template>
   <BaseLayout>
-    <h2 class="text-3xl font-bold">Recetas</h2>
+    <div class="flex items-center">
+      <h2 class="text-3xl font-bold mr-4">Recetas</h2>
+      <PlusIcon
+        class="h-6 w-6 rounded-full bg-green-600 text-white"
+        @click="showRecipeForm()"
+      />
+    </div>
 
-    <template v-for="type in types" :key="type">
-      <div class="mt-4 flex items-center">
-        <h3 class="font-bold text-lg pr-4">{{ t(`menu.${type.name}`) }}</h3>
-        <PlusIcon class="h-6 w-6 rounded-full bg-green-600 text-white" />
+    <section v-for="type in types" :key="type">
+      <div class="mt-4">
+        <div class="flex items-center">
+          <h3 class="font-bold text-lg pr-4">{{ t(`menu.${type.name}`) }}</h3>
+        </div>
       </div>
       <RecipesTable
         v-if="Object.keys(recipes).length"
         :headers="['id', 'description']"
         :items="recipes[type.name]"
       />
-    </template>
+    </section>
+    <CreateNewRecipeModal
+      v-if="shouldShowRecipeForm"
+      :recipe-types="types"
+      @close="closeCreateRecipeModal"
+    />
   </BaseLayout>
 </template>

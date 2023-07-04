@@ -23,6 +23,11 @@ export function useRecipes() {
     return data
   }
 
+  const createRecipe = async recipeInfo => {
+    const { error } = await supabase.from('recipes').insert(recipeInfo)
+    if (error) throw error
+  }
+
   const listRecipesTypes = async () => {
     const { data, error } = await supabase.from('recipes_types').select()
     if (error) throw error
@@ -46,5 +51,6 @@ export function useRecipes() {
     listRecipesTypes,
     readRecipe,
     readRecipeType,
+    createRecipe,
   }
 }
