@@ -15,9 +15,7 @@ export function useMenu() {
       .select()
       .eq(
         'day',
-        new Date(
-          `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${day}Z`,
-        ).toISOString(),
+        `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${day}`,
       )
     if (error) throw error
 
