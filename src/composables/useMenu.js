@@ -27,9 +27,7 @@ export function useMenu() {
   const saveMenu = async ({ day, menu }) => {
     const { data, error } = await supabase.from('menu').insert([
       {
-        day: new Date(
-          `${new Date().getMonth() + 1}/${day}/${new Date().getFullYear()}`,
-        ),
+        day: `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${day}`,
         breakfast: menu['breakfast'].id,
         snack: menu['snack'].id,
         lunch: menu['lunch'].id,
@@ -52,9 +50,11 @@ export function useMenu() {
     for (const type of types) {
       const recipes = await listRecipes({ type: type.id })
       const randomNumbers = generateRandomNumbers({
-        quantity: 3,
+        quantity: 5,
         max: recipes.length,
       })
+
+      // TODO: refactor this
 
       allRecipes = {
         ...allRecipes,
@@ -70,11 +70,19 @@ export function useMenu() {
           ...allRecipes[today + 2],
           [type.name]: recipes[randomNumbers[2]],
         },
+        [today + 3]: {
+          ...allRecipes[today + 3],
+          [type.name]: recipes[randomNumbers[3]],
+        },
+        [today + 4]: {
+          ...allRecipes[today + 4],
+          [type.name]: recipes[randomNumbers[4]],
+        },
       }
     }
 
     for (const day in allRecipes) {
-      saveMenu({ day, menu: allRecipes[day] })
+      await saveMenu({ day, menu: allRecipes[day] })
     }
 
     return allRecipes
