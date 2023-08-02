@@ -10,7 +10,12 @@ defineProps({
     type: Array,
     required: true,
   },
+  type: {
+    type: Object,
+    default: () => ({}),
+  },
 })
+defineEmits(['update-recipe'])
 
 const { t } = useI18n()
 </script>
@@ -44,6 +49,7 @@ const { t } = useI18n()
           <td class="whitespace-nowrap px-4 py-2 text-end">
             <button
               class="inline-block rounded bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-700"
+              @click="$emit('update-recipe', { id, description, type })"
             >
               Editar
             </button>

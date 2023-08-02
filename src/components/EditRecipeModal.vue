@@ -1,10 +1,14 @@
 <script setup>
-import BaseModal from '@/components/BaseModal.vue'
-import { useRecipes } from '../composables/useRecipes'
 import { ref } from 'vue'
+import BaseModal from './BaseModal.vue'
 import { useI18n } from 'vue-i18n'
+import { useRecipes } from '@/composables/useRecipes'
 
-defineProps({
+const props = defineProps({
+  recipe: {
+    type: Object,
+    default: () => ({}),
+  },
   recipeTypes: {
     type: Array,
     required: true,
@@ -12,15 +16,16 @@ defineProps({
 })
 const emit = defineEmits(['close'])
 
-const { createRecipe } = useRecipes()
 const { t } = useI18n()
+const { updateRecipe } = useRecipes()
 
-const recipeText = ref('')
-const recipeTypeSelected = ref()
+const recipeText = ref(props.recipe.description)
+const recipeTypeSelected = ref(props.recipe.type.id)
 
-async function addRecipe() {
+async function updateCurrentRecipe() {
   try {
-    await createRecipe({
+    await updateRecipe({
+      id: props.recipe.id,
       description: recipeText.value,
       type: recipeTypeSelected.value,
     })
@@ -30,26 +35,25 @@ async function addRecipe() {
   }
 }
 
-function closeModal() {
-  emit('close', recipeTypeSelected.value)
-}
-
-function selectRecipeType(recipeId) {
-  recipeTypeSelected.value = recipeId
+const closeModal = () => {
+  emit('close')
 }
 </script>
 
 <template>
   <BaseModal :is-active="true" @close="closeModal">
-    <template #header>Crear receta</template>
-    <form @submit.prevent="addRecipe" class="flex flex-col items-center gap-4">
+    <template #header>Editar receta</template>
+    <form
+      @submit.prevent="updateCurrentRecipe"
+      class="flex flex-col items-center gap-4"
+    >
       <div class="flex flex-wrap gap-2">
         <span
           v-for="type in recipeTypes"
           :key="type.id"
           class="badge badge-primary px-3 py-2 hover:opacity-60 hover:cursor-pointer"
           :class="type.id !== recipeTypeSelected ? 'badge-outline' : ''"
-          @click="selectRecipeType(type.id)"
+          @click="recipeTypeSelected = type.id"
         >
           {{ t(`menu.${type.name}`) }}
         </span>
@@ -74,7 +78,7 @@ function selectRecipeType(recipeId) {
           type="submit"
           :disabled="!recipeText || !recipeTypeSelected"
         >
-          Crear
+          Guardar
         </button>
       </div>
     </form>

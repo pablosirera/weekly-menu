@@ -46,11 +46,20 @@ export function useRecipes() {
     return data[0]
   }
 
+  const updateRecipe = async recipeInfo => {
+    const { error } = await supabase
+      .from('recipes')
+      .update({ description: recipeInfo.description, type: recipeInfo.type })
+      .eq('id', recipeInfo.id)
+    if (error) throw error
+  }
+
   return {
     listRecipes,
     listRecipesTypes,
     readRecipe,
     readRecipeType,
     createRecipe,
+    updateRecipe,
   }
 }

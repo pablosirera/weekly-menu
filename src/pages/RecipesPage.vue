@@ -6,6 +6,7 @@ import { useRecipes } from '@/composables/useRecipes'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CreateNewRecipeModal from '@/components/CreateNewRecipeModal.vue'
+import EditRecipeModal from '@/components/EditRecipeModal.vue'
 
 const { listRecipesTypes, listRecipes } = useRecipes()
 const { t } = useI18n()
@@ -13,6 +14,8 @@ const { t } = useI18n()
 const types = ref([])
 const recipes = ref({})
 const shouldShowRecipeForm = ref(false)
+const shouldShowEditRecipeModal = ref(false)
+const recipeToEdit = ref({})
 
 const loadData = async () => {
   types.value = await listRecipesTypes()
@@ -39,6 +42,16 @@ const closeCreateRecipeModal = async recipeType => {
   shouldShowRecipeForm.value = false
 }
 
+const showEditRecipe = recipe => {
+  recipeToEdit.value = recipe
+  shouldShowEditRecipeModal.value = true
+}
+
+const hideEditRecipe = async () => {
+  await loadData()
+  shouldShowEditRecipeModal.value = false
+}
+
 loadData()
 </script>
 
@@ -62,12 +75,20 @@ loadData()
         v-if="Object.keys(recipes).length"
         :headers="['id', 'description']"
         :items="recipes[type.name]"
+        :type="type"
+        @update-recipe="showEditRecipe"
       />
     </section>
     <CreateNewRecipeModal
       v-if="shouldShowRecipeForm"
       :recipe-types="types"
       @close="closeCreateRecipeModal"
+    />
+    <EditRecipeModal
+      v-if="shouldShowEditRecipeModal"
+      :recipe="recipeToEdit"
+      :recipe-types="types"
+      @close="hideEditRecipe()"
     />
   </BaseLayout>
 </template>
