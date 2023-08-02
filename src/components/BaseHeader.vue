@@ -2,7 +2,7 @@
 import { useUser } from '@/composables/useUser'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from 'vue-i18n'
-import { BuildingStorefrontIcon } from '@heroicons/vue/24/outline'
+import { ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline'
 
 const { isAuthenticated } = useUser()
 const { logout } = useAuth()
@@ -35,7 +35,7 @@ const { t } = useI18n()
             @click="logout()"
             class="block shrink-0 px-2 hover:rounded text-green-400 hover:bg-green-900"
           >
-            Logout
+            <ArrowRightOnRectangleIcon class="w-6 h-6" />
           </button>
         </div>
       </div>
