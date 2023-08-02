@@ -61,16 +61,16 @@ function selectRecipeType(recipeId) {
         placeholder="Descripción receta"
         class="input input-bordered w-full max-w-xs"
       />
-      <div class="flex gap-1">
+      <div class="flex gap-4">
         <button
-          class="btn btn-xs"
+          class="btn btn-sm"
           type="submit"
           :disabled="!recipeText || !recipeTypeSelected"
         >
           Crear
         </button>
         <button
-          class="btn btn-error btn-xs"
+          class="btn btn-error btn-sm"
           type="button"
           @click="closeModal()"
         >

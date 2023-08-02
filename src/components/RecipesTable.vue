@@ -17,13 +17,13 @@ const { t } = useI18n()
 
 <template>
   <div class="overflow-x-auto">
-    <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
+    <table class="min-w-full divide-y-2 divide-gray-200 text-sm">
       <thead class="text-left">
         <tr>
           <th
             v-for="header in headers"
             :key="header"
-            class="whitespace-nowrap px-4 py-2 font-medium text-gray-900"
+            class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"
           >
             {{ t(`table.${header}`) }}
           </th>
@@ -33,10 +33,12 @@ const { t } = useI18n()
 
       <tbody class="divide-y divide-gray-200">
         <tr v-for="{ id, description } in items" :key="id">
-          <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
+          <td
+            class="whitespace-nowrap px-4 py-2 font-medium text-gray-900 dark:text-white"
+          >
             {{ id }}
           </td>
-          <td class="whitespace-nowrap px-4 py-2 text-gray-700">
+          <td class="whitespace-nowrap px-4 py-2 text-gray-700 dark:text-white">
             {{ description }}
           </td>
           <td class="whitespace-nowrap px-4 py-2 text-end">
