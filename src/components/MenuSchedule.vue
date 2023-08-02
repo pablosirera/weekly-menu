@@ -1,11 +1,13 @@
 <script setup>
 import ScheduleItem from './ScheduleItem.vue'
-import DocumentationIcon from './icons/IconDocumentation.vue'
-import ToolingIcon from './icons/IconTooling.vue'
-import EcosystemIcon from './icons/IconEcosystem.vue'
-import CommunityIcon from './icons/IconCommunity.vue'
-import SupportIcon from './icons/IconSupport.vue'
 import BordererCard from './BordererCard.vue'
+import {
+  BriefcaseIcon,
+  CakeIcon,
+  CubeTransparentIcon,
+  FaceSmileIcon,
+  HeartIcon,
+} from '@heroicons/vue/24/outline'
 
 defineProps({
   menu: {
@@ -22,7 +24,7 @@ defineEmits(['updateMenu'])
     <h2 class="font-bold text-3xl dark:text-white">Menú</h2>
     <ScheduleItem>
       <template #icon>
-        <DocumentationIcon />
+        <FaceSmileIcon class="w-6 h-6" />
       </template>
       <template #heading>
         <BordererCard
@@ -36,7 +38,7 @@ defineEmits(['updateMenu'])
 
     <ScheduleItem>
       <template #icon>
-        <ToolingIcon />
+        <BriefcaseIcon class="w-6 h-6" />
       </template>
       <template #heading>
         <BordererCard
@@ -50,7 +52,7 @@ defineEmits(['updateMenu'])
 
     <ScheduleItem>
       <template #icon>
-        <EcosystemIcon />
+        <CubeTransparentIcon class="w-6 h-6" />
       </template>
       <template #heading>
         <BordererCard
@@ -64,7 +66,7 @@ defineEmits(['updateMenu'])
 
     <ScheduleItem>
       <template #icon>
-        <CommunityIcon />
+        <CakeIcon class="w-6 h-6" />
       </template>
       <template #heading>
         <BordererCard
@@ -78,7 +80,7 @@ defineEmits(['updateMenu'])
 
     <ScheduleItem>
       <template #icon>
-        <SupportIcon />
+        <HeartIcon class="w-6 h-6" />
       </template>
       <template #heading>
         <BordererCard
