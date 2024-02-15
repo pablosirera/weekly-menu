@@ -39,9 +39,8 @@ export function useMenu() {
     return data
   }
 
-  const createMenu = async () => {
+  const createMenu = async days => {
     let allRecipes = {}
-    const today = new Date().getDate()
 
     const types = await listRecipesTypes()
 
@@ -52,30 +51,14 @@ export function useMenu() {
         max: recipes.length,
       })
 
-      // TODO: refactor this
-
-      allRecipes = {
-        ...allRecipes,
-        [today]: {
-          ...allRecipes[today],
-          [type.name]: recipes[randomNumbers[0]],
-        },
-        [today + 1]: {
-          ...allRecipes[today + 1],
-          [type.name]: recipes[randomNumbers[1]],
-        },
-        [today + 2]: {
-          ...allRecipes[today + 2],
-          [type.name]: recipes[randomNumbers[2]],
-        },
-        [today + 3]: {
-          ...allRecipes[today + 3],
-          [type.name]: recipes[randomNumbers[3]],
-        },
-        [today + 4]: {
-          ...allRecipes[today + 4],
-          [type.name]: recipes[randomNumbers[4]],
-        },
+      for (const [index, day] of days.entries()) {
+        allRecipes = {
+          ...allRecipes,
+          [day]: {
+            ...allRecipes[day],
+            [type.name]: recipes[randomNumbers[index]],
+          },
+        }
       }
     }
 

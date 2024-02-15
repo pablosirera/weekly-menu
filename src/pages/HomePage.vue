@@ -8,26 +8,20 @@ import { useMenu } from '@/composables/useMenu'
 import { useRecipes } from '@/composables/useRecipes'
 import BaseLayout from '@/components/BaseLayout.vue'
 import UpdateMenuModal from '@/components/UpdateMenuModal.vue'
+import CreateMenuModal from '@/components/CreateMenuModal.vue'
+import { loadDays } from '@/utils/days'
 
 const { t } = useI18n()
-const { createMenu, readMenu } = useMenu()
+const { readMenu } = useMenu()
 const { readRecipe } = useRecipes()
 
 const todayMenu = ref({})
-const allRecipes = ref([])
 const showUpdateMenuModal = ref(false)
 const menuTypeToUpdate = ref('')
+const showCreateMenuModal = ref(false)
 
 const today = new Date().getDate()
-let days = []
-
-const loadDays = () => {
-  // TODO refactor this array
-  days = [today, today + 1, today + 2, today + 3, today + 4].map(day => ({
-    value: day.toString(),
-    text: day,
-  }))
-}
+let days = loadDays(4)
 
 const loadMenu = async day => {
   const data = await readMenu(day)
@@ -53,13 +47,6 @@ const loadMenu = async day => {
   }
 }
 
-const generateMenu = async () => {
-  // mostrar modal y seleccionar los días que quieres para el menú
-  allRecipes.value = await createMenu()
-
-  todayMenu.value = allRecipes.value[today]
-}
-
 const openUpdateMenuModal = type => {
   menuTypeToUpdate.value = type
   showUpdateMenuModal.value = true
@@ -68,6 +55,11 @@ const openUpdateMenuModal = type => {
 const closeUpdateMenuModal = () => {
   showUpdateMenuModal.value = false
   loadMenu(today)
+}
+
+const closeCreateMenuModal = () => {
+  loadMenu(today)
+  showCreateMenuModal.value = false
 }
 
 loadDays()
@@ -82,7 +74,7 @@ loadMenu(today)
       </h2>
       <button
         class="rounded-md bg-green-600 px-12 py-3 text-sm font-medium text-white dark:hover:bg-green-800 dark:hover:text-white"
-        @click="generateMenu()"
+        @click="showCreateMenuModal = true"
       >
         Crear Menú
       </button>
@@ -106,4 +98,5 @@ loadMenu(today)
     :menu-today="todayMenu"
     @close="closeUpdateMenuModal"
   />
+  <CreateMenuModal v-if="showCreateMenuModal" @close="closeCreateMenuModal" />
 </template>
