@@ -1,4 +1,5 @@
-@import './tailwind.css';
+@import 'tailwindcss';
+
 @import './global.css';
 
 a,
@@ -12,4 +13,19 @@ a,
   a:hover {
     background-color: hsla(160, 100%, 37%, 0.2);
   }
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.bottom-tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }

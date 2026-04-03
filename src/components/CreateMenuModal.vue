@@ -11,6 +11,10 @@ const { createMenu } = useMenu()
 
 const selectedDays = ref([])
 const days = loadDays()
+const defaultDay = days[0]?.value
+if (defaultDay) {
+  selectedDays.value = [defaultDay]
+}
 
 function closeModal() {
   emit('close')
@@ -34,7 +38,7 @@ async function saveMenu() {
       <RadioGroups
         type="checkbox"
         :options="days"
-        :defaultOption="new Date().getDate().toString()"
+        :defaultOption="defaultDay"
         name="create-days"
         @change="saveDays"
       />

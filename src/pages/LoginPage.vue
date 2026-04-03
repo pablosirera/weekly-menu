@@ -32,7 +32,7 @@ const handleLogin = async () => {
 const checkAuthentication = async () => {
   const data = await getSession()
   if (data) {
-    router.push({ name: 'HomePage' })
+    router.replace({ name: 'HomePage', hash: '' })
   }
 }
 

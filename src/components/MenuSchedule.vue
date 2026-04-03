@@ -43,9 +43,9 @@ defineEmits(['updateMenu'])
       <template #heading>
         <BordererCard
           title="Almuerzo"
-          :text="menu['snack']?.description"
+          :text="menu['brunch']?.description"
           :has-edit-icon="true"
-          @edit="$emit('updateMenu', 'snack')"
+          @edit="$emit('updateMenu', 'brunch')"
         />
       </template>
     </ScheduleItem>
@@ -71,9 +71,9 @@ defineEmits(['updateMenu'])
       <template #heading>
         <BordererCard
           title="Merienda"
-          :text="menu['snack2']?.description"
+          :text="menu['snack']?.description"
           :has-edit-icon="true"
-          @edit="$emit('updateMenu', 'snack2')"
+          @edit="$emit('updateMenu', 'snack')"
         />
       </template>
     </ScheduleItem>

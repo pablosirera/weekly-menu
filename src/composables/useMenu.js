@@ -1,5 +1,5 @@
 import { generateRandomNumbers } from '../utils/numbers'
-
+import { RECIPE_TYPE_KEYS } from '@/utils/recipeTypes'
 import { useRecipes } from './useRecipes'
 import useSupabase from './useSupabase'
 import { useUser } from './useUser'
@@ -7,81 +7,75 @@ import { useUser } from './useUser'
 export function useMenu() {
   const { supabase } = useSupabase()
   const { user } = useUser()
-  const { listRecipesTypes, listRecipes } = useRecipes()
+  const { listRecipes } = useRecipes()
 
-  const readMenu = async day => {
+  const readMenu = async planDate => {
     const { data, error } = await supabase
-      .from('menu')
-      .select()
-      .eq(
-        'day',
-        `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${day}`,
+      .from('meal_plans')
+      .select(
+        'id, user_id, plan_date, slot, recipe_id, notes, recipe:recipes(id,title,description,photo_url)',
       )
+      .eq('plan_date', planDate)
+      .order('slot', { ascending: true })
+
     if (error) throw error
 
+    return data || []
+  }
+
+  const upsertMealPlanSlot = async ({
+    planDate,
+    slot,
+    recipeId,
+    notes = null,
+  }) => {
+    const payload = {
+      user_id: user.value.id,
+      plan_date: planDate,
+      slot,
+      recipe_id: recipeId,
+      notes,
+    }
+
+    const { data, error } = await supabase
+      .from('meal_plans')
+      .upsert(payload, { onConflict: 'user_id,plan_date,slot' })
+      .select('id, plan_date, slot, recipe_id')
+      .single()
+
+    if (error) throw error
     return data
   }
 
-  const saveMenu = async ({ day, menu }) => {
-    const { data, error } = await supabase.from('menu').insert([
-      {
-        day: `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${day}`,
-        breakfast: menu['breakfast'].id,
-        snack: menu['snack'].id,
-        lunch: menu['lunch'].id,
-        snack2: menu['snack2'].id,
-        dinner: menu['dinner'].id,
-        user: user.value.id,
-      },
-    ])
-    if (error) throw error
+  const createMenu = async planDates => {
+    const recipesByType = {}
 
-    return data
-  }
+    for (const slot of RECIPE_TYPE_KEYS) {
+      recipesByType[slot] = await listRecipes({ type: slot })
+    }
 
-  const createMenu = async days => {
-    let allRecipes = {}
+    for (const planDate of planDates) {
+      for (const slot of RECIPE_TYPE_KEYS) {
+        const recipes = recipesByType[slot]
+        if (!recipes.length) continue
 
-    const types = await listRecipesTypes()
+        const [randomIndex] = generateRandomNumbers({
+          quantity: 1,
+          max: recipes.length,
+        })
 
-    for (const type of types) {
-      const recipes = await listRecipes({ type: type.id })
-      const randomNumbers = generateRandomNumbers({
-        quantity: 5,
-        max: recipes.length,
-      })
-
-      for (const [index, day] of days.entries()) {
-        allRecipes = {
-          ...allRecipes,
-          [day]: {
-            ...allRecipes[day],
-            [type.name]: recipes[randomNumbers[index]],
-          },
-        }
+        await upsertMealPlanSlot({
+          planDate,
+          slot,
+          recipeId: recipes[randomIndex]?.id || null,
+        })
       }
     }
-
-    for (const day in allRecipes) {
-      await saveMenu({ day, menu: allRecipes[day] })
-    }
-
-    return allRecipes
-  }
-
-  const updateMenu = async ({ id, recipeType, recipeTypeId }) => {
-    console.log(id, recipeType, recipeTypeId)
-    const { error } = await supabase
-      .from('menu')
-      .update({ [recipeType]: recipeTypeId })
-      .eq('id', id)
-
-    if (error) throw error
   }
 
   return {
     createMenu,
     readMenu,
-    updateMenu,
+    upsertMealPlanSlot,
   }
 }

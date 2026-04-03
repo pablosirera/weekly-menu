@@ -22,16 +22,26 @@ const router = createRouter({
       path: '/recipes',
       name: 'RecipesPage',
       component: () => import('@/pages/RecipesPage.vue'),
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/shopping',
+      name: 'ShoppingPage',
+      component: () => import('@/pages/ShoppingPage.vue'),
+      meta: {
+        requiresAuth: true,
+      },
     },
   ],
 })
 
 router.beforeEach(to => {
   const { isAuthenticated } = useUser()
-
-  if (!isAuthenticated() && to.meta.requiresAuth) {
-    return { name: 'LoginPage' }
-  }
+  if (!to.meta.requiresAuth) return true
+  if (isAuthenticated()) return true
+  return { name: 'LoginPage' }
 })
 
 export default router

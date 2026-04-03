@@ -1,12 +1,10 @@
 <script setup>
 import { useUser } from '@/composables/useUser'
 import { useAuth } from '@/composables/useAuth'
-import { useI18n } from 'vue-i18n'
 import { ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline'
 
 const { isAuthenticated } = useUser()
 const { logout } = useAuth()
-const { t } = useI18n()
 </script>
 
 <template>
@@ -17,7 +15,7 @@ const { t } = useI18n()
           class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl"
           to="/"
         >
-          {{ t('general.appTitle') }}
+          Weekly Menu
         </RouterLink>
         <div class="flex gap-4">
           <RouterLink to="/recipes" class="block shrink-0 px-2 hover:rounded">

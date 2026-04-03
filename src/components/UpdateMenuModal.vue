@@ -1,70 +1,125 @@
 <script setup>
+import { computed, onMounted, ref } from 'vue'
 import BaseModal from '@/components/BaseModal.vue'
-import { useRecipes } from '../composables/useRecipes'
-import { ref } from 'vue'
-import { useMenu } from '../composables/useMenu'
+import { useMenu } from '@/composables/useMenu'
+import { usePantry } from '@/composables/usePantry'
+import { getRecipeTypeLabel } from '@/utils/labels'
 
 const props = defineProps({
-  menuType: {
+  mealSlot: {
     type: String,
     required: true,
   },
-  menuToday: {
-    type: Object,
-    default: () => ({}),
+  planDate: {
+    type: String,
+    required: true,
+  },
+  currentRecipeId: {
+    type: [String, Number, null],
+    default: null,
   },
 })
+
 const emit = defineEmits(['close'])
 
-const { listRecipes, readRecipeType } = useRecipes()
-const { updateMenu } = useMenu()
+const { upsertMealPlanSlot } = useMenu()
+const { listAvailablePantryItems, replaceMealPlanAllocation } = usePantry()
 
-const recipes = ref([])
-const showModal = ref(false)
-const recipeSelected = ref(props.menuToday[props.menuType].id)
+const pantryItems = ref([])
+const selectedPantryItemId = ref(null)
+const isLoading = ref(false)
 
-const loadMenu = async () => {
-  const type = await readRecipeType({ type: props.menuType })
-  recipes.value = await listRecipes({ type: type.id })
-  showModal.value = true
+const availableOptions = computed(() => {
+  const hasRecipeType = pantryItems.value.some(item =>
+    Boolean(item.recipe?.type),
+  )
+  if (!hasRecipeType) return pantryItems.value
+
+  return pantryItems.value.filter(item => item.recipe?.type === props.mealSlot)
+})
+
+const loadPantry = async () => {
+  isLoading.value = true
+  try {
+    pantryItems.value = await listAvailablePantryItems()
+  } catch (error) {
+    console.error(error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const saveMenu = async () => {
-  await updateMenu({
-    id: props.menuToday.id,
-    recipeType: props.menuType,
-    recipeTypeId: recipeSelected.value,
-  })
-  closeModal()
+  if (!selectedPantryItemId.value) return
+
+  const selectedPantryItem = pantryItems.value.find(
+    item => item.id === selectedPantryItemId.value,
+  )
+  if (!selectedPantryItem?.recipe_id) return
+
+  try {
+    const mealPlan = await upsertMealPlanSlot({
+      planDate: props.planDate,
+      slot: props.mealSlot,
+      recipeId: selectedPantryItem.recipe_id,
+    })
+
+    await replaceMealPlanAllocation({
+      mealPlanId: mealPlan.id,
+      pantryItemId: selectedPantryItem.id,
+      quantity: 1,
+    })
+
+    emit('close')
+  } catch (error) {
+    console.error(error)
+  }
 }
 
-const closeModal = () => {
-  showModal.value = false
-  emit('close')
-}
-
-loadMenu()
+onMounted(loadPantry)
 </script>
 
 <template>
-  <BaseModal :is-active="showModal" @close="closeModal">
-    <template #header> Editar menu </template>
-    <div class="flex flex-col">
-      <p>Elige el plato que quieras cambiar:</p>
+  <BaseModal :is-active="true" @close="emit('close')">
+    <template #header>
+      {{ getRecipeTypeLabel(mealSlot) }}
+    </template>
+
+    <div class="flex flex-col gap-3">
+      <p>Elige un plato de compra disponible para este slot:</p>
 
       <select
-        class="select w-full max-w-xs select-bordered"
-        v-model="recipeSelected"
+        v-model="selectedPantryItemId"
+        class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
       >
-        <option selected :value="menuToday[menuType].id">
-          {{ menuToday[menuType].description }}
-        </option>
-        <option v-for="recipe in recipes" :value="recipe.id" :key="recipe.id">
-          {{ recipe.description }}
+        <option :value="null" disabled>Selecciona un plato</option>
+        <option
+          v-for="item in availableOptions"
+          :key="item.id"
+          :value="item.id"
+        >
+          {{
+            item.recipe?.title ||
+            item.recipe?.description ||
+            'Receta sin titulo'
+          }}
+          · {{ item.remaining_quantity }} uds
         </option>
       </select>
 
-      <button class="btn btn-sm mt-4" @click="saveMenu">Guardar</button>
+      <p v-if="isLoading" class="text-xs text-slate-500">Cargando...</p>
+      <p v-else-if="!availableOptions.length" class="text-xs text-slate-500">
+        No hay platos disponibles en Compra para
+        {{ getRecipeTypeLabel(mealSlot).toLowerCase() }}.
+      </p>
+
+      <button
+        class="mt-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+        :disabled="!selectedPantryItemId"
+        @click="saveMenu"
+      >
+        Guardar
+      </button>
     </div>
   </BaseModal>
 </template>

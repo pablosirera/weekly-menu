@@ -31,6 +31,18 @@ export function useAuth() {
 
     if (error) throw error
 
+    if (
+      data.session?.access_token &&
+      typeof window !== 'undefined' &&
+      window.location.hash.includes('access_token=')
+    ) {
+      window.history.replaceState(
+        null,
+        document.title,
+        `${window.location.pathname}${window.location.search}`,
+      )
+    }
+
     if (data.session && data.session.user) {
       setUser(new UserModel(data.session.user))
     }

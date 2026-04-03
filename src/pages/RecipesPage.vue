@@ -1,94 +1,161 @@
 <script setup>
+import { computed, onMounted, ref } from 'vue'
+import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/vue/24/outline'
 import BaseLayout from '@/components/BaseLayout.vue'
-import { PlusIcon } from '@heroicons/vue/24/outline'
-import RecipesTable from '@/components/RecipesTable.vue'
+import RecipeCard from '@/components/RecipeCard.vue'
+import RecipeFormModal from '@/components/RecipeFormModal.vue'
+import RecipeDetailsModal from '@/components/RecipeDetailsModal.vue'
 import { useRecipes } from '@/composables/useRecipes'
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import CreateNewRecipeModal from '@/components/CreateNewRecipeModal.vue'
-import EditRecipeModal from '@/components/EditRecipeModal.vue'
 
-const { listRecipesTypes, listRecipes } = useRecipes()
-const { t } = useI18n()
+const { listAllRecipes } = useRecipes()
 
-const types = ref([])
-const recipes = ref({})
-const shouldShowRecipeForm = ref(false)
-const shouldShowEditRecipeModal = ref(false)
-const recipeToEdit = ref({})
+const recipes = ref([])
+const isLoading = ref(false)
+const search = ref('')
 
-const loadData = async () => {
-  types.value = await listRecipesTypes()
+const showFormModal = ref(false)
+const formMode = ref('create')
+const recipeToEdit = ref(null)
 
-  for (const type of types.value) {
-    const currentRecipes = await listRecipes({ type: type.id })
+const showDetailsModal = ref(false)
+const recipeToView = ref(null)
 
-    recipes.value = {
-      ...recipes.value,
-      [type.name]: currentRecipes,
-    }
+const filteredRecipes = computed(() => {
+  const query = search.value.trim().toLowerCase()
+  if (!query) return recipes.value
+
+  return recipes.value.filter(recipe => {
+    const titleMatch = recipe.title?.toLowerCase().includes(query)
+    const descriptionMatch = recipe.description?.toLowerCase().includes(query)
+    const tagMatch = recipe.tags?.some(tag => tag.toLowerCase().includes(query))
+
+    return titleMatch || descriptionMatch || tagMatch
+  })
+})
+
+const loadRecipes = async () => {
+  isLoading.value = true
+  try {
+    const data = await listAllRecipes()
+    recipes.value = data.sort((a, b) => {
+      const aDate = new Date(a.updated_at || a.created_at || 0)
+      const bDate = new Date(b.updated_at || b.created_at || 0)
+      return bDate - aDate
+    })
+  } catch (error) {
+    console.error(error)
+  } finally {
+    isLoading.value = false
   }
 }
 
-const showRecipeForm = () => {
-  shouldShowRecipeForm.value = true
+const openCreateModal = () => {
+  formMode.value = 'create'
+  recipeToEdit.value = null
+  showFormModal.value = true
 }
 
-const closeCreateRecipeModal = async recipeType => {
-  if (recipeType) {
-    const type = types.value.find(t => t.id === recipeType)
-    recipes.value[type.name] = await listRecipes({ type: type.id })
-  }
-  shouldShowRecipeForm.value = false
-}
-
-const showEditRecipe = recipe => {
+const openEditModal = recipe => {
+  formMode.value = 'edit'
   recipeToEdit.value = recipe
-  shouldShowEditRecipeModal.value = true
+  showFormModal.value = true
 }
 
-const hideEditRecipe = async () => {
-  await loadData()
-  shouldShowEditRecipeModal.value = false
+const openDetailsModal = recipe => {
+  recipeToView.value = recipe
+  showDetailsModal.value = true
 }
 
-loadData()
+const closeFormModal = async () => {
+  showFormModal.value = false
+  await loadRecipes()
+}
+
+const closeDetailsModal = () => {
+  showDetailsModal.value = false
+}
+
+onMounted(loadRecipes)
 </script>
 
 <template>
   <BaseLayout>
-    <div class="flex items-center">
-      <h2 class="text-3xl font-bold mr-4">Recetas</h2>
-      <PlusIcon
-        class="h-6 w-6 rounded-full bg-green-600 text-white"
-        @click="showRecipeForm()"
-      />
-    </div>
+    <section class="space-y-6">
+      <div
+        class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+      >
+        <div>
+          <p
+            class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400"
+          >
+            Catálogo
+          </p>
+          <h2 class="text-3xl font-semibold text-slate-900">Recetas</h2>
+          <p class="mt-1 text-sm text-slate-500">
+            Guarda tus recetas, tiempos, raciones y notas clave en un solo
+            lugar.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
+          @click="openCreateModal"
+        >
+          <PlusIcon class="h-5 w-5" />
+          Nueva receta
+        </button>
+      </div>
 
-    <section v-for="type in types" :key="type">
-      <div class="mt-4">
-        <div class="flex items-center">
-          <h3 class="font-bold text-lg pr-4">{{ t(`menu.${type.name}`) }}</h3>
+      <div
+        class="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm md:flex-row md:items-center"
+      >
+        <div
+          class="flex flex-1 items-center gap-2 rounded-full bg-slate-100 px-4 py-2"
+        >
+          <MagnifyingGlassIcon class="h-5 w-5 text-slate-400" />
+          <input
+            v-model="search"
+            type="text"
+            placeholder="Buscar por nombre, descripcion o tag"
+            class="w-full bg-transparent text-sm text-slate-700 outline-none"
+          />
+        </div>
+        <div class="text-xs font-semibold text-slate-500">
+          {{ filteredRecipes.length }} recetas
         </div>
       </div>
-      <RecipesTable
-        v-if="Object.keys(recipes).length"
-        :headers="['id', 'description']"
-        :items="recipes[type.name]"
-        :type="type"
-        @update-recipe="showEditRecipe"
-      />
+
+      <div v-if="isLoading" class="text-sm text-slate-500">Cargando...</div>
+
+      <div
+        v-else-if="!filteredRecipes.length"
+        class="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500"
+      >
+        Aun no tienes recetas. Crea la primera con el boton "Nueva receta".
+      </div>
+
+      <div v-else class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <RecipeCard
+          v-for="recipe in filteredRecipes"
+          :key="recipe.id"
+          :recipe="recipe"
+          @edit="openEditModal"
+          @view="openDetailsModal"
+        />
+      </div>
     </section>
-    <CreateNewRecipeModal
-      v-if="shouldShowRecipeForm"
-      :recipe-types="types"
-      @close="closeCreateRecipeModal"
-    />
-    <EditRecipeModal
-      v-if="shouldShowEditRecipeModal"
+
+    <RecipeFormModal
+      v-if="showFormModal"
+      :mode="formMode"
       :recipe="recipeToEdit"
-      :recipe-types="types"
-      @close="hideEditRecipe()"
+      @close="closeFormModal"
+    />
+
+    <RecipeDetailsModal
+      v-if="showDetailsModal"
+      :recipe="recipeToView"
+      @close="closeDetailsModal"
     />
   </BaseLayout>
 </template>

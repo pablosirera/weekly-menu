@@ -9,8 +9,8 @@
     "breakfast": "Desayuno | Desayunos",
     "dinner": "Cena | Cenas",
     "lunch": "Comida | Comidas",
-    "snack": "Almuerzo | Almuerzos",
-    "snack2": "Merienda | Meriendas"
+    "snack": "Merienda | Meriendas",
+    "brunch": "Almuerzo | Almuerzos"
   },
   "table": {
     "description": "Descripción",
