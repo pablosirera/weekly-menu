@@ -26,7 +26,8 @@ const { upsertMealPlanSlot } = useMenu()
 const { listAvailablePantryItems, replaceMealPlanAllocation } = usePantry()
 
 const pantryItems = ref([])
-const selectedPantryItemId = ref(null)
+const NONE_OPTION = '__none__'
+const selectedPantryItemId = ref(NONE_OPTION)
 const isLoading = ref(false)
 
 const availableOptions = computed(() => {
@@ -42,6 +43,14 @@ const loadPantry = async () => {
   isLoading.value = true
   try {
     pantryItems.value = await listAvailablePantryItems()
+    if (props.currentRecipeId) {
+      const matchingItem = pantryItems.value.find(
+        item => item.recipe_id === props.currentRecipeId,
+      )
+      selectedPantryItemId.value = matchingItem?.id || NONE_OPTION
+    } else {
+      selectedPantryItemId.value = NONE_OPTION
+    }
   } catch (error) {
     console.error(error)
   } finally {
@@ -52,21 +61,31 @@ const loadPantry = async () => {
 const saveMenu = async () => {
   if (!selectedPantryItemId.value) return
 
-  const selectedPantryItem = pantryItems.value.find(
-    item => item.id === selectedPantryItemId.value,
-  )
-  if (!selectedPantryItem?.recipe_id) return
+  const isNoneSelected = selectedPantryItemId.value === NONE_OPTION
 
   try {
-    const mealPlan = await upsertMealPlanSlot({
-      planDate: props.planDate,
-      slot: props.mealSlot,
-      recipeId: selectedPantryItem.recipe_id,
-    })
+    let mealPlan
+    if (isNoneSelected) {
+      mealPlan = await upsertMealPlanSlot({
+        planDate: props.planDate,
+        slot: props.mealSlot,
+        recipeId: null,
+      })
+    } else {
+      const selectedPantryItem = pantryItems.value.find(
+        item => item.id === selectedPantryItemId.value,
+      )
+      if (!selectedPantryItem?.recipe_id) return
+      mealPlan = await upsertMealPlanSlot({
+        planDate: props.planDate,
+        slot: props.mealSlot,
+        recipeId: selectedPantryItem.recipe_id,
+      })
+    }
 
     await replaceMealPlanAllocation({
       mealPlanId: mealPlan.id,
-      pantryItemId: selectedPantryItem.id,
+      pantryItemId: isNoneSelected ? null : selectedPantryItemId.value,
       quantity: 1,
     })
 
@@ -92,7 +111,7 @@ onMounted(loadPantry)
         v-model="selectedPantryItemId"
         class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
       >
-        <option :value="null" disabled>Selecciona un plato</option>
+        <option :value="NONE_OPTION">Sin asignar</option>
         <option
           v-for="item in availableOptions"
           :key="item.id"
@@ -115,7 +134,7 @@ onMounted(loadPantry)
 
       <button
         class="mt-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-        :disabled="!selectedPantryItemId"
+        :disabled="!selectedPantryItemId || isLoading"
         @click="saveMenu"
       >
         Guardar

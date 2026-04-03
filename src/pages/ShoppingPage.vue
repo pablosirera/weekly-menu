@@ -206,24 +206,32 @@ onMounted(loadData)
           <article
             v-for="item in activeItems"
             :key="item.id"
-            class="flex items-center gap-4 justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
+            class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
           >
-            <div>
-              <p class="text-sm font-semibold text-slate-900">
-                {{
-                  item.recipe?.title ||
-                  item.recipe?.description ||
-                  item.custom_name ||
-                  'Plato sin nombre'
-                }}
-              </p>
-              <p class="mt-1 text-xs text-slate-500">
-                {{ item.remaining_quantity }} de {{ item.quantity }} unidades
-                disponibles
-                <span v-if="item.notes">· {{ item.notes }}</span>
-              </p>
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-slate-900">
+                  {{
+                    item.recipe?.title ||
+                    item.recipe?.description ||
+                    item.custom_name ||
+                    'Plato sin nombre'
+                  }}
+                </p>
+                <p class="mt-1 text-xs text-slate-500">
+                  {{ item.remaining_quantity }} de {{ item.quantity }} unidades
+                  disponibles
+                  <span v-if="item.notes">· {{ item.notes }}</span>
+                </p>
+              </div>
+              <span
+                class="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700"
+              >
+                Activo
+              </span>
             </div>
-            <div class="flex flex-col items-end gap-2">
+
+            <div class="mt-3 flex flex-wrap items-center justify-end gap-2">
               <label
                 class="inline-flex items-center gap-2 text-sm text-slate-600"
               >
@@ -240,7 +248,7 @@ onMounted(loadData)
                 class="rounded-full border border-emerald-300 px-3 py-1 text-xs font-semibold text-emerald-700"
                 @click="openConvertModal(item)"
               >
-                Convertir
+                Convertir a receta
               </button>
               <button
                 type="button"
@@ -268,22 +276,30 @@ onMounted(loadData)
           <article
             v-for="item in completedItems"
             :key="item.id"
-            class="flex items-center gap-4 justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4"
+            class="rounded-2xl border border-slate-100 bg-slate-50 p-4"
           >
-            <div>
-              <p class="text-sm font-semibold text-slate-700">
-                {{
-                  item.recipe?.title ||
-                  item.recipe?.description ||
-                  item.custom_name ||
-                  'Plato sin nombre'
-                }}
-              </p>
-              <p class="mt-1 text-xs text-slate-500">
-                {{ item.quantity }} unidades
-              </p>
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-slate-700">
+                  {{
+                    item.recipe?.title ||
+                    item.recipe?.description ||
+                    item.custom_name ||
+                    'Plato sin nombre'
+                  }}
+                </p>
+                <p class="mt-1 text-xs text-slate-500">
+                  {{ item.quantity }} unidades
+                </p>
+              </div>
+              <span
+                class="shrink-0 rounded-full bg-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-600"
+              >
+                Completado
+              </span>
             </div>
-            <div class="flex flex-col items-end gap-2">
+
+            <div class="mt-3 flex flex-wrap items-center justify-end gap-2">
               <button
                 type="button"
                 class="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600"
@@ -297,7 +313,7 @@ onMounted(loadData)
                 class="rounded-full border border-emerald-300 px-3 py-1 text-xs font-semibold text-emerald-700"
                 @click="openConvertModal(item)"
               >
-                Convertir
+                Convertir a receta
               </button>
               <button
                 type="button"
