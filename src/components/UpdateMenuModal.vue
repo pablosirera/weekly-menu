@@ -122,7 +122,12 @@ onMounted(loadPantry)
             item.recipe?.description ||
             'Receta sin titulo'
           }}
-          · {{ item.remaining_quantity }} uds
+          ·
+          {{
+            item.is_open_quantity
+              ? 'sin definir'
+              : `${item.remaining_quantity} uds`
+          }}
         </option>
       </select>
 

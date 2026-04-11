@@ -5,6 +5,7 @@ import BaseLayout from '@/components/BaseLayout.vue'
 import ConvertFreeItemModal from '@/components/ConvertFreeItemModal.vue'
 import { usePantry } from '@/composables/usePantry'
 import { useRecipes } from '@/composables/useRecipes'
+import { getRecipeTypeLabel } from '@/utils/labels'
 
 const {
   listPantryItems,
@@ -20,10 +21,15 @@ const recipes = ref([])
 const isLoading = ref(false)
 const showConvertModal = ref(false)
 const itemToConvert = ref(null)
+const addMode = ref('recipe')
+const showNotes = ref(false)
+const isRecipePickerOpen = ref(false)
+const recipeSearch = ref('')
 
 const form = ref({
   recipe_id: '',
   custom_name: '',
+  quantity_mode: 'fixed',
   quantity: 1,
   notes: '',
 })
@@ -40,9 +46,65 @@ const completedItems = computed(() =>
   ),
 )
 
-const canSubmit = computed(
-  () => Boolean(form.value.recipe_id) || Boolean(form.value.custom_name.trim()),
+const selectedRecipe = computed(
+  () =>
+    recipes.value.find(recipe => recipe.id === form.value.recipe_id) || null,
 )
+
+const recipeGroups = computed(() => {
+  const groups = new Map()
+
+  for (const recipe of recipes.value) {
+    const groupKey = recipe.type || 'other'
+    const groupLabel =
+      groupKey === 'other' ? 'Otros' : getRecipeTypeLabel(groupKey)
+
+    if (!groups.has(groupKey)) {
+      groups.set(groupKey, { key: groupKey, label: groupLabel, items: [] })
+    }
+
+    groups.get(groupKey).items.push(recipe)
+  }
+
+  return Array.from(groups.values())
+})
+
+const filteredRecipeGroups = computed(() => {
+  const query = recipeSearch.value.trim().toLowerCase()
+
+  return recipeGroups.value
+    .map(group => {
+      if (!query) return group
+
+      const items = group.items.filter(recipe => {
+        const title = (recipe.title || '').toLowerCase()
+        const description = (recipe.description || '').toLowerCase()
+        return title.includes(query) || description.includes(query)
+      })
+
+      return { ...group, items }
+    })
+    .filter(group => group.items.length > 0)
+})
+
+const canSubmit = computed(() => {
+  if (addMode.value === 'recipe') return Boolean(form.value.recipe_id)
+  return Boolean(form.value.custom_name.trim())
+})
+
+const submitLabel = computed(() =>
+  addMode.value === 'recipe' ? 'Añadir receta' : 'Añadir plato libre',
+)
+
+const getItemQuantityText = item => {
+  if (item.is_open_quantity) return 'Cantidad sin definir'
+  return `${item.remaining_quantity} de ${item.quantity} unidades disponibles`
+}
+
+const getCompletedQuantityText = item => {
+  if (item.is_open_quantity) return 'Cantidad sin definir'
+  return `${item.quantity} unidades`
+}
 
 const loadData = async () => {
   isLoading.value = true
@@ -62,26 +124,66 @@ const loadData = async () => {
 
 const addItem = async () => {
   const customName = form.value.custom_name.trim()
-  if (!form.value.recipe_id && !customName) return
+
+  if (addMode.value === 'recipe' && !form.value.recipe_id) return
+  if (addMode.value === 'free' && !customName) return
 
   try {
     await createPantryItem({
-      recipe_id: form.value.recipe_id || null,
-      custom_name: customName || null,
-      quantity: Number(form.value.quantity) || 1,
+      recipe_id: addMode.value === 'recipe' ? form.value.recipe_id : null,
+      custom_name: addMode.value === 'free' ? customName : null,
+      quantity_mode: form.value.quantity_mode,
+      quantity:
+        form.value.quantity_mode === 'open'
+          ? null
+          : Number(form.value.quantity) || 1,
       notes: form.value.notes.trim() || null,
     })
 
     form.value = {
       recipe_id: '',
       custom_name: '',
+      quantity_mode: 'fixed',
       quantity: 1,
       notes: '',
     }
+    recipeSearch.value = ''
+    isRecipePickerOpen.value = false
+    showNotes.value = false
 
     await loadData()
   } catch (error) {
     console.error(error)
+  }
+}
+
+const setAddMode = mode => {
+  addMode.value = mode
+  recipeSearch.value = ''
+  isRecipePickerOpen.value = false
+
+  if (mode === 'recipe') {
+    form.value.custom_name = ''
+  } else {
+    form.value.recipe_id = ''
+  }
+}
+
+const selectRecipe = recipe => {
+  form.value.recipe_id = recipe.id
+  isRecipePickerOpen.value = false
+  recipeSearch.value = ''
+}
+
+const changeQuantity = delta => {
+  const nextValue = Number(form.value.quantity || 1) + delta
+  form.value.quantity = Math.max(1, nextValue)
+}
+
+const setQuantityMode = mode => {
+  form.value.quantity_mode = mode
+  if (mode === 'fixed' && (!form.value.quantity || form.value.quantity < 1)) {
+    form.value.quantity = 1
   }
 }
 
@@ -137,60 +239,210 @@ onMounted(loadData)
 <template>
   <BaseLayout>
     <section class="space-y-6">
-      <div>
-        <p
-          class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400"
-        >
-          Inventario
-        </p>
-        <h2 class="text-3xl font-semibold text-slate-900">Compra</h2>
-        <p class="mt-1 text-sm text-slate-500">
-          Registra platos disponibles para usarlos al planificar la semana.
-        </p>
-      </div>
-
       <form
-        class="grid w-full min-w-0 gap-3 overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-sm md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_minmax(0,1fr)_auto]"
+        class="w-full min-w-0 space-y-4 overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
         @submit.prevent="addItem"
       >
-        <select
-          v-model="form.recipe_id"
-          class="w-full min-w-0 rounded-xl border border-slate-200 px-3 py-2 text-sm"
+        <h3 class="text-base font-semibold text-slate-900">Añade tu plato</h3>
+
+        <div
+          class="relative flex w-full max-w-xs items-center rounded-full bg-slate-100 p-1"
         >
-          <option value="">Selecciona un plato</option>
-          <option v-for="recipe in recipes" :key="recipe.id" :value="recipe.id">
-            {{ recipe.title || recipe.description || 'Receta sin titulo' }}
-          </option>
-        </select>
+          <span
+            class="pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-transform duration-200"
+            :class="addMode === 'free' ? 'translate-x-full' : ''"
+          ></span>
+          <button
+            type="button"
+            class="relative z-10 flex-1 rounded-full px-4 py-1.5 text-sm font-semibold transition"
+            :class="addMode === 'recipe' ? 'text-slate-900' : 'text-slate-500'"
+            @click="setAddMode('recipe')"
+          >
+            Desde receta
+          </button>
+          <button
+            type="button"
+            class="relative z-10 flex-1 rounded-full px-4 py-1.5 text-sm font-semibold transition"
+            :class="addMode === 'free' ? 'text-slate-900' : 'text-slate-500'"
+            @click="setAddMode('free')"
+          >
+            Plato libre
+          </button>
+        </div>
 
-        <input
-          v-model="form.custom_name"
-          type="text"
-          class="w-full min-w-0 rounded-xl border border-slate-200 px-3 py-2 text-sm"
-          placeholder="O escribe un plato libre"
-        />
+        <div v-if="addMode === 'recipe'" class="space-y-2">
+          <label class="text-sm font-semibold text-slate-700">Receta</label>
+          <div
+            class="relative overflow-visible rounded-2xl border border-slate-200 bg-white"
+          >
+            <button
+              type="button"
+              class="flex h-11 w-full items-center justify-between px-3 text-left text-sm text-slate-700 hover:bg-slate-50"
+              @click="isRecipePickerOpen = !isRecipePickerOpen"
+            >
+              <span class="truncate">
+                {{
+                  selectedRecipe?.title ||
+                  selectedRecipe?.description ||
+                  'Selecciona una receta'
+                }}
+              </span>
+              <span class="ml-2 text-slate-400">⌄</span>
+            </button>
 
-        <input
-          v-model="form.quantity"
-          type="number"
-          min="1"
-          class="w-full min-w-0 rounded-xl border border-slate-200 px-3 py-2 text-sm"
-          placeholder="Cantidad"
-        />
+            <div
+              v-if="isRecipePickerOpen"
+              class="absolute left-0 right-0 top-[calc(100%+8px)] z-30 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg"
+            >
+              <input
+                v-model="recipeSearch"
+                type="text"
+                class="h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm"
+                placeholder="Buscar receta..."
+              />
 
-        <input
-          v-model="form.notes"
-          type="text"
-          class="w-full min-w-0 rounded-xl border border-slate-200 px-3 py-2 text-sm"
-          placeholder="Notas (opcional)"
-        />
+              <div class="mt-2 max-h-56 space-y-3 overflow-y-auto pr-1">
+                <p
+                  v-if="!filteredRecipeGroups.length"
+                  class="px-2 py-2 text-xs text-slate-500"
+                >
+                  No se encontraron recetas.
+                </p>
+
+                <div
+                  v-for="group in filteredRecipeGroups"
+                  :key="group.key"
+                  class="space-y-1"
+                >
+                  <div class="flex items-center gap-2 px-2">
+                    <p
+                      class="text-[11px] font-semibold uppercase tracking-wide text-slate-400"
+                    >
+                      {{ group.label }}
+                    </p>
+                    <div class="h-px flex-1 bg-slate-100"></div>
+                  </div>
+
+                  <button
+                    v-for="recipe in group.items"
+                    :key="recipe.id"
+                    type="button"
+                    class="flex w-full items-start rounded-lg px-2 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+                    @click="selectRecipe(recipe)"
+                  >
+                    <span class="truncate">
+                      {{
+                        recipe.title ||
+                        recipe.description ||
+                        'Receta sin titulo'
+                      }}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="space-y-2">
+          <label class="text-sm font-semibold text-slate-700"
+            >Nombre del plato</label
+          >
+          <input
+            v-model="form.custom_name"
+            type="text"
+            class="h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm"
+            placeholder="Ej: Pasta con atún"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-semibold text-slate-700">Cantidad</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              class="rounded-xl border px-3 py-2 text-left text-xs transition"
+              :class="
+                form.quantity_mode === 'fixed'
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                  : 'border-slate-200 bg-white text-slate-600'
+              "
+              @click="setQuantityMode('fixed')"
+            >
+              <span class="block font-semibold">Exacta</span>
+              <span class="mt-0.5 block text-[11px] opacity-80"
+                >Con unidades</span
+              >
+            </button>
+            <button
+              type="button"
+              class="rounded-xl border px-3 py-2 text-left text-xs transition"
+              :class="
+                form.quantity_mode === 'open'
+                  ? 'border-amber-300 bg-amber-50 text-amber-800'
+                  : 'border-slate-200 bg-white text-slate-600'
+              "
+              @click="setQuantityMode('open')"
+            >
+              <span class="block font-semibold">Sin definir</span>
+              <span class="mt-0.5 block text-[11px] opacity-80"
+                >Sin unidades</span
+              >
+            </button>
+          </div>
+
+          <div
+            v-if="form.quantity_mode === 'fixed'"
+            class="mt-2 flex w-full max-w-[220px] items-center justify-between rounded-2xl border border-slate-200 px-2 py-1"
+          >
+            <button
+              type="button"
+              class="h-7 w-7 rounded-full text-slate-600 hover:bg-slate-100"
+              @click="changeQuantity(-1)"
+            >
+              -
+            </button>
+            <span
+              class="min-w-[2ch] text-center text-sm font-semibold text-slate-800"
+            >
+              {{ form.quantity }}
+            </span>
+            <button
+              type="button"
+              class="h-7 w-7 rounded-full text-slate-600 hover:bg-slate-100"
+              @click="changeQuantity(1)"
+            >
+              +
+            </button>
+          </div>
+          <p v-else class="mt-2 text-xs text-slate-500">
+            Podrás asignarlo al planificador sin definir unidades.
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <button
+            type="button"
+            class="text-xs font-semibold text-slate-500 underline underline-offset-2"
+            @click="showNotes = !showNotes"
+          >
+            {{ showNotes ? 'Ocultar nota' : '+ Añadir nota' }}
+          </button>
+          <input
+            v-if="showNotes"
+            v-model="form.notes"
+            type="text"
+            class="h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm"
+            placeholder="Ej: para lunes y martes"
+          />
+        </div>
 
         <button
           type="submit"
           class="w-full rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white md:w-auto"
           :disabled="!canSubmit"
         >
-          Anadir
+          {{ submitLabel }}
         </button>
       </form>
 
@@ -219,8 +471,7 @@ onMounted(loadData)
                   }}
                 </p>
                 <p class="mt-1 text-xs text-slate-500">
-                  {{ item.remaining_quantity }} de {{ item.quantity }} unidades
-                  disponibles
+                  {{ getItemQuantityText(item) }}
                   <span v-if="item.notes">· {{ item.notes }}</span>
                 </p>
               </div>
@@ -289,7 +540,7 @@ onMounted(loadData)
                   }}
                 </p>
                 <p class="mt-1 text-xs text-slate-500">
-                  {{ item.quantity }} unidades
+                  {{ getCompletedQuantityText(item) }}
                 </p>
               </div>
               <span

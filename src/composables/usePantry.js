@@ -4,16 +4,22 @@ import { useUser } from './useUser'
 const ACTIVE_PANTRY_STATUSES = ['available', 'assigned']
 
 const withRemainingQuantity = item => {
+  const quantityMode = item.quantity_mode || 'fixed'
   const allocated = (item.allocations || []).reduce(
     (sum, allocation) => sum + Number(allocation.quantity || 0),
     0,
   )
   const quantity = Number(item.quantity || 0)
+  const isOpenQuantity = quantityMode === 'open'
 
   return {
     ...item,
+    quantity_mode: quantityMode,
+    is_open_quantity: isOpenQuantity,
     allocated_quantity: allocated,
-    remaining_quantity: Math.max(quantity - allocated, 0),
+    remaining_quantity: isOpenQuantity
+      ? null
+      : Math.max(quantity - allocated, 0),
   }
 }
 
@@ -21,7 +27,7 @@ export function usePantry() {
   const { supabase } = useSupabase()
   const { user } = useUser()
   const pantrySelect =
-    'id, user_id, recipe_id, custom_name, quantity, status, storage, appliances, purchased_at, best_before, notes, created_at, recipe:recipes(id,title,description), allocations:pantry_item_allocations(quantity)'
+    'id, user_id, recipe_id, custom_name, quantity_mode, quantity, status, storage, appliances, purchased_at, best_before, notes, created_at, recipe:recipes(id,title,description), allocations:pantry_item_allocations(quantity)'
 
   const listPantryItems = async () => {
     const { data, error } = await supabase
@@ -41,7 +47,7 @@ export function usePantry() {
       item =>
         ACTIVE_PANTRY_STATUSES.includes(item.status) &&
         item.recipe_id &&
-        item.remaining_quantity > 0,
+        (item.is_open_quantity || item.remaining_quantity > 0),
     )
   }
 
@@ -58,7 +64,11 @@ export function usePantry() {
       ...pantryInfo,
       custom_name: customName,
       status: pantryInfo.status || 'available',
-      quantity: Number(pantryInfo.quantity || 1),
+      quantity_mode: pantryInfo.quantity_mode || 'fixed',
+      quantity:
+        pantryInfo.quantity_mode === 'open'
+          ? null
+          : Number(pantryInfo.quantity || 1),
       user_id: user.value.id,
     }
 
